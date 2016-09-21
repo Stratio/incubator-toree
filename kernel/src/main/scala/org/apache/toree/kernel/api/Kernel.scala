@@ -17,7 +17,8 @@
 
 package org.apache.toree.kernel.api
 
-import java.io.{OutputStream, InputStream, PrintStream}
+import java.io.{File, OutputStream, InputStream, PrintStream}
+import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.toree.annotations.Experimental
@@ -32,11 +33,13 @@ import org.apache.toree.kernel.protocol.v5.kernel.ActorLoader
 import org.apache.toree.kernel.protocol.v5.magic.MagicParser
 import org.apache.toree.kernel.protocol.v5.stream.{KernelOutputStream, KernelInputStream}
 import org.apache.toree.magic.{MagicLoader, MagicExecutor}
+import org.apache.toree.utils.directoryOps.DirectoryOps
 import org.apache.toree.utils.{KeyValuePairUtils, LogLike}
 import com.typesafe.config.Config
 import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkContext, SparkConf}
+import scala.tools.nsc.Settings
 import scala.util.{Try, DynamicVariable}
 
 import scala.reflect.runtime.universe._
@@ -92,6 +95,8 @@ class Kernel (
   private var _sparkConf:SparkConf = null;
   private var _javaSparkContext:JavaSparkContext = null;
   private var _sqlContext:SQLContext = null;
+  private var _scalaInterpreterSettings:Settings = null;
+  private var _sparkClassServer:Any = null;
 
   /**
    * Represents magics available through the kernel.
@@ -117,7 +122,8 @@ class Kernel (
 
   /**
    * Handles the output of interpreting code.
-   * @param output the output of the interpreter
+    *
+    * @param output the output of the interpreter
    * @return (success, message) or (failure, message)
    */
   private def handleInterpreterOutput(
@@ -175,8 +181,7 @@ class Kernel (
    *
    * @param parentMessage The message to serve as the parent of outgoing
    *                      messages sent as a result of using streaming methods
-   *
-   * @return The collection of streaming methods
+    * @return The collection of streaming methods
    */
   private[toree] def stream(
     parentMessage: v5.KernelMessage = lastKernelMessage()
@@ -201,8 +206,7 @@ class Kernel (
    *                      by the factory methods
    * @param kmBuilder The builder to be used by objects created by factory
    *                  methods
-   *
-   * @return The collection of factory methods
+    * @return The collection of factory methods
    */
   private[toree] def factory(
     parentMessage: v5.KernelMessage = lastKernelMessage(),
@@ -317,8 +321,7 @@ class Kernel (
    * Retrieves the last kernel message received by the kernel.
    *
    * @throws IllegalArgumentException If no kernel message has been received
-   *
-   * @return The kernel message instance
+    * @return The kernel message instance
    */
   private def lastKernelMessage() = {
     val someKernelMessage = ExecuteRequestState.lastKernelMessage
@@ -363,13 +366,62 @@ class Kernel (
       Try(conf.set(keyValuePair.key, keyValuePair.value))
     }
 
-    // TODO: Move SparkIMain to private and insert in a different way
-    logger.warn("Locked to Scala interpreter with SparkIMain until decoupled!")
+    // Create and start a Spark HttpServer
+    // -----------------------------------------------------------------------------------------------
+    // Using reflection hack to access to a private class
 
-    // TODO: Construct class server outside of SparkIMain
-    logger.warn("Unable to control initialization of REPL class server!")
-    logger.info("REPL Class Server Uri: " + interpreter.classServerURI)
-    conf.set("spark.repl.class.uri", interpreter.classServerURI)
+    // Spark conf used in HttpServer initialization
+    val sConf: SparkConf = new SparkConf()
+
+    // Output directory
+    val tmp = System.getProperty("java.io.tmpdir")
+    val rootDir = conf.get("spark.repl.classdir", tmp)
+    val outputDir: File = DirectoryOps.createDirectory(rootDir)
+    logger.info( "Creating temporal directory for storing scala classes: " + outputDir.getAbsolutePath )
+
+    // Creating security manager
+    logger.info( "Creating security manager" )
+    val securityManagerClass: Class[_] = java.lang.Class.forName("org.apache.spark.SecurityManager")
+    val securityManagerConstructor = securityManagerClass.getDeclaredConstructor(classOf[SparkConf])
+    val securityManager = securityManagerConstructor.newInstance( sConf )
+
+    logger.info( "Creating HTTP Server" )
+    val httpServerClass: Class[_] = java.lang.Class.forName("org.apache.spark.HttpServer")
+    val httpServerConstructor =
+      httpServerClass.getDeclaredConstructor(
+        classOf[SparkConf], classOf[File], securityManagerClass,classOf[Int] ,classOf[String]
+      )
+    val httpServer: Any =
+      httpServerConstructor.newInstance(
+        sConf, outputDir, securityManager.asInstanceOf[Object], 0: java.lang.Integer,  "HTTP server"
+      )
+    _sparkClassServer = httpServer
+
+    logger.info( "Starting HTTP Server" )
+    val startServerMethod: Method = httpServerClass.getMethod("start")
+    startServerMethod.invoke(httpServer)
+
+    logger.info( "Getting URI of HTTP Server" )
+    val uriServerMethod: Method = httpServerClass.getMethod("uri")
+    val uri: String = uriServerMethod.invoke(httpServer).asInstanceOf[String]
+
+    logger.info( "REPL Class Server Uri: " + uri )
+    conf.set("spark.repl.class.uri", uri )
+
+    logger.info( "Creating Scala Interpreter settings: linked with classServer thought the created directory" )
+    val s = new Settings()
+    s.processArguments(
+      List(
+        "-Yrepl-class-based",
+        "-Yrepl-outdir", s"${outputDir.getAbsolutePath}"),
+      true
+    )
+    _scalaInterpreterSettings = s
+
+    logger.info( "Antonio - Initializating interpreter" )
+    interpreterManager.initializeInterpreters(this)
+
+
 
     conf
   }
@@ -446,4 +498,6 @@ class Kernel (
   override def sparkConf: SparkConf = _sparkConf
   override def javaSparkContext: JavaSparkContext = _javaSparkContext
   override def sqlContext: SQLContext = _sqlContext
+  override def scalaInterpreterSettings: Settings = _scalaInterpreterSettings
+  override def sparkClassServer: Any = _sparkClassServer
 }

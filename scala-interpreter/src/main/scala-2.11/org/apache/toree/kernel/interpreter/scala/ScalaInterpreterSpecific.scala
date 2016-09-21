@@ -106,7 +106,7 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
   /**
    * Not available on Scala 2.11!
    */
-  override def classServerURI: String = ???
+  override def classServerURI: String = {""}
 
   /**
    * Returns the name of the variable created from the last execution.
@@ -225,7 +225,7 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
     (result.cursor, result.candidates)
   }
 
-  protected def newSettings(args: List[String]): Settings = ???
+  protected def newSettings(args: List[String]): Settings = { new Settings() }
 
   protected def interpretAddTask(code: String, silent: Boolean): Future[IR.Result] = {
     taskManager.add {
