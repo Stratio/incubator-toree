@@ -15,9 +15,12 @@
 # limitations under the License
 #
 
-.PHONY: help clean clean-dist build dev test test-travis release pip-release bin-release
+.PHONY: help clean clean-dist build test bin-release
 
-VERSION?=0.1.0.dev4
+# -----------------------------------------------------------------------
+#  Variables
+# -----------------------------------------------------------------------
+VERSION?=0.1.0.stratio.dev4
 COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
 ifeq (, $(findstring dev, $(VERSION)))
 IS_SNAPSHOT?=false
@@ -26,110 +29,54 @@ IS_SNAPSHOT?=true
 SNAPSHOT:=-SNAPSHOT
 endif
 
-APACHE_SPARK_VERSION?=1.5.1
-IMAGE?=jupyter/pyspark-notebook:2988869079e6
-EXAMPLE_IMAGE?=apache/toree-examples
-DOCKER_WORKDIR?=/srv/toree
-DOCKER_ARGS?=
-define DOCKER
-docker run -it --rm \
-	--workdir $(DOCKER_WORKDIR) \
-	-e PYTHONPATH='/srv/toree' \
-	-v `pwd`:/srv/toree $(DOCKER_ARGS)
-endef
-
-define GEN_PIP_PACKAGE_INFO
-printf "__version__ = '$(VERSION)'\n" >> dist/toree/_version.py
-printf "__commit__ = '$(COMMIT)'\n" >> dist/toree/_version.py
-endef
-
-USE_VAGRANT?=
-RUN_PREFIX=$(if $(USE_VAGRANT),vagrant ssh -c "cd $(VM_WORKDIR) && )
-RUN_SUFFIX=$(if $(USE_VAGRANT),")
-
-RUN=$(RUN_PREFIX)$(1)$(RUN_SUFFIX)
-
+APACHE_SPARK_VERSION?=1.6.2
+SCALA_VERSION?=2.11.7
+SCALA_BINARY_VERSION?=2.11
 ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(VERSION) IS_SNAPSHOT=$(IS_SNAPSHOT)
-
 ASSEMBLY_JAR:=toree-kernel-assembly-$(VERSION)$(SNAPSHOT).jar
 
+# -----------------------------------------------------------------------
+#  make help
+# -----------------------------------------------------------------------
 help:
 	@echo '      clean - clean build files'
-	@echo '        dev - starts ipython'
 	@echo '       dist - build a directory with contents to package'
 	@echo '      build - builds assembly'
 	@echo '       test - run all units'
-	@echo '    release - creates packaged distribution'
-	@echo '    jupyter - starts a Jupyter Notebook with Toree installed'
 
-build-info:
-	@echo '$(ENV_OPTS) $(VERSION)'
+# -----------------------------------------------------------------------
+#  make clean
+# -----------------------------------------------------------------------
+clean:
+	$(ENV_OPTS) sbt ++$(SCALA_VERSION) clean
 
-clean-dist:
-	-rm -r dist
+# -----------------------------------------------------------------------
+#  make build
+# -----------------------------------------------------------------------
+kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): VM_WORKDIR=/src/toree-kernel
+kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): ${shell find ./*/src/main/**/*}
+kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): ${shell find ./*/build.sbt}
+kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): project/build.properties project/Build.scala project/Common.scala project/plugins.sbt
+	$(ENV_OPTS) sbt ++$(SCALA_VERSION) toree-kernel/assembly
 
-clean: VM_WORKDIR=/src/toree-kernel
-clean: clean-dist
-	$(call RUN,$(ENV_OPTS) sbt clean)
+build: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR)
 
-.example-image: EXTRA_CMD?=pip install jupyter_declarativewidgets==0.4.0; jupyter declarativewidgets install --user; jupyter declarativewidgets activate; pip install jupyter_dashboards; jupyter dashboards install --user; jupyter dashboards activate; apt-get update; apt-get install --yes curl; curl --silent --location https://deb.nodesource.com/setup_0.12 | sudo bash -; apt-get install --yes nodejs; npm install -g bower;
-.example-image:
-	@-docker rm -f examples_image
-	@docker run -it --user root --name examples_image \
-		$(IMAGE) bash -c '$(EXTRA_CMD)'
-	@docker commit examples_image $(EXAMPLE_IMAGE)
-	@-docker rm -f examples_image
-	touch $@
-
-kernel/target/scala-2.10/$(ASSEMBLY_JAR): VM_WORKDIR=/src/toree-kernel
-kernel/target/scala-2.10/$(ASSEMBLY_JAR): ${shell find ./*/src/main/**/*}
-kernel/target/scala-2.10/$(ASSEMBLY_JAR): ${shell find ./*/build.sbt}
-kernel/target/scala-2.10/$(ASSEMBLY_JAR): project/build.properties project/Build.scala project/Common.scala project/plugins.sbt
-	$(call RUN,$(ENV_OPTS) sbt toree-kernel/assembly)
-
-build: kernel/target/scala-2.10/$(ASSEMBLY_JAR)
-
-dev: VM_WORKDIR=~
-dev: dist
-	$(call RUN,ipython notebook --ip=* --no-browser)
-
+# -----------------------------------------------------------------------
+#  make test
+# -----------------------------------------------------------------------
 test: VM_WORKDIR=/src/toree-kernel
 test:
-	$(call RUN,$(ENV_OPTS) sbt compile test)
+	$(ENV_OPTS) sbt ++$(SCALA_VERSION) compile test
 
+# -----------------------------------------------------------------------
+#  make dist
+# -----------------------------------------------------------------------
 dist: VERSION_FILE=dist/toree/VERSION
-dist: kernel/target/scala-2.10/$(ASSEMBLY_JAR) ${shell find ./etc/bin/*}
+dist: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell find ./etc/bin/*}
 	@mkdir -p dist/toree/bin dist/toree/lib
 	@cp -r etc/bin/* dist/toree/bin/.
-	@cp kernel/target/scala-2.10/$(ASSEMBLY_JAR) dist/toree/lib/.
+	@cp kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) dist/toree/lib/.
 	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
-	@echo "COMMIT: $(COMMIT)" >> $(VERSION_FILE)
-
-test-travis:
-	$(ENV_OPTS) sbt clean test -Dakka.test.timefactor=3
-	find $(HOME)/.sbt -name "*.lock" | xargs rm
-	find $(HOME)/.ivy2 -name "ivydata-*.properties" | xargs rm
-
-pip-release: DOCKER_WORKDIR=/srv/toree/dist
-pip-release: dist
-	@cp -rf etc/pip_install/* dist/.
-	@$(GEN_PIP_PACKAGE_INFO)
-	@$(DOCKER) $(IMAGE) python setup.py sdist --dist-dir=.
-	@$(DOCKER) -p 8888:8888 --user=root  $(IMAGE) bash -c	'pip install toree-$(VERSION).tar.gz && jupyter toree install'
 
 bin-release: dist
 	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
-
-release: DOCKER_WORKDIR=/srv/toree/dist
-release: PYPI_REPO?=https://pypi.python.org/pypi
-release: PYPI_USER?=
-release: PYPI_PASSWORD?=
-release: PYPIRC=printf "[distutils]\nindex-servers =\n\tpypi\n\n[pypi]\nrepository: $(PYPI_REPO) \nusername: $(PYPI_USER)\npassword: $(PYPI_PASSWORD)" > ~/.pypirc;
-release: pip-release bin-release
-	@$(DOCKER) $(IMAGE) bash -c '$(PYPIRC) pip install twine && \
-		python setup.py register -r $(PYPI_REPO) && \
-		twine upload -r pypi toree-$(VERSION).tar.gz'
-
-jupyter: DOCKER_WORKDIR=/srv/toree/dist
-jupyter: .example-image pip-release
-	@$(DOCKER) -p 8888:8888 --user=root  $(EXAMPLE_IMAGE) bash -c	'pip install toree-$(VERSION).tar.gz && jupyter toree install && cd /srv/toree/etc/examples/notebooks && jupyter notebook --ip=* --no-browser'
