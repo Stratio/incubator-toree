@@ -24,6 +24,8 @@ import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
 
+import scala.tools.nsc.Settings
+
 /**
  * Interface for the kernel API. This does not include exposed variables.
  */
@@ -37,7 +39,6 @@ trait KernelLike {
    * Executes a block of code represented as a string and returns the result.
    *
    * @param code The code as an option to execute
-   *
    * @return A tuple containing the result (true/false) and the output as a
    *         string
    */
@@ -104,4 +105,9 @@ trait KernelLike {
   def javaSparkContext: JavaSparkContext
 
   def sqlContext: SQLContext
+
+  def scalaInterpreterSettings: Settings
+
+  def sparkClassServer: Any
+
 }

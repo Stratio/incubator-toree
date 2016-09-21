@@ -62,9 +62,9 @@ class ScalaInterpreter() extends Interpreter with ScalaInterpreterSpecific {
      new TaskManager(maximumWorkers = maxInterpreterThreads)
 
    override def init(kernel: KernelLike): Interpreter = {
-     val args = interpreterArgs(kernel)
-     this.settings = newSettings(args)
 
+     logger.info("Initializating scala interpreter")
+     this.settings = kernel.scalaInterpreterSettings
      this.settings.classpath.value = buildClasspath(_thisClassloader)
      this.settings.embeddedDefaults(_runtimeClassloader)
 
