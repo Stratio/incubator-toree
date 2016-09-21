@@ -116,7 +116,7 @@ class Kernel (
   val data: java.util.Map[String, Any] = new ConcurrentHashMap[String, Any]()
 
 
-  interpreterManager.initializeInterpreters(this)
+  // interpreterManager.initializeInterpreters(this)
 
   val interpreter = interpreterManager.defaultInterpreter.get
 
