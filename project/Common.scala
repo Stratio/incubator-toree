@@ -39,9 +39,9 @@ object Common {
     else versionNumber
 
   // Default version when NOT cross-compiling
-  private val buildScalaVersion = "2.10.4"
+  private val buildScalaVersion = "2.11.7"
   private val buildCrossScalaVersions = Seq(
-    buildScalaVersion, "2.11.7"
+    buildScalaVersion, "2.10.4"
   )
 
   // Global dependencies provided to all projects
