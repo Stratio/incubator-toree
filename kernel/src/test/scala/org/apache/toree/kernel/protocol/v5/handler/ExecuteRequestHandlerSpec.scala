@@ -159,7 +159,7 @@ class ExecuteRequestHandlerSpec extends TestKit(
         var statusMsgNum = -1
         var statusReceived = false
 
-        val f1 = future {
+        val f1 = Future {
           kernelMessageRelayProbe.fishForMessage(4.seconds) {
             case KernelMessage(_, _, header, _, _, _) =>
               if (header.msg_type == ExecuteResult.toTypeString &&
@@ -172,7 +172,7 @@ class ExecuteRequestHandlerSpec extends TestKit(
           }
         }
 
-        val f2 = future {
+        val f2 = Future {
           statusDispatchProbe.fishForMessage(4.seconds) {
             case (status, header) =>
               if (status == KernelStatusIdle.toString)
@@ -181,7 +181,7 @@ class ExecuteRequestHandlerSpec extends TestKit(
             statusReceived || (msgCount.get() >= 2)
           }
         }
-        val fs = (f1 zip f2)
+        val fs = f1.zip(f2)
         Await.ready(fs, 5.seconds)
 
         statusMsgNum should equal(2)
