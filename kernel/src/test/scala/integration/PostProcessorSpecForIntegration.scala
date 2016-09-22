@@ -23,8 +23,11 @@ import org.apache.toree.kernel.api.KernelLike
 import org.apache.toree.kernel.interpreter.scala.ScalaInterpreter
 import org.apache.toree.kernel.protocol.v5.magic.PostProcessor
 import org.apache.toree.utils.{MultiOutputStream, TaskManager}
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}
+
+import scala.tools.nsc.Settings
 
 class PostProcessorSpecForIntegration extends FunSpec with Matchers
   with BeforeAndAfter with MockitoSugar
@@ -48,7 +51,10 @@ class PostProcessorSpecForIntegration extends FunSpec with Matchers
 
       override protected def bindKernelVarialble(kernel: KernelLike): Unit = { }
     }
-    scalaInterpreter.init(mock[KernelLike])
+
+    val kernelLikeMocked = mock[KernelLike]
+    when(kernelLikeMocked.scalaInterpreterSettings).thenReturn(new Settings())
+    scalaInterpreter.init(kernelLikeMocked)
 
     postProcessor = new PostProcessor(scalaInterpreter)
   }
