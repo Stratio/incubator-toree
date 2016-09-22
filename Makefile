@@ -79,7 +79,7 @@ dist: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell find .
 	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
 
 # -----------------------------------------------------------------------
-#  make bin-release
+    #  make bin-release
 # -----------------------------------------------------------------------
 bin-release: dist
 	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
