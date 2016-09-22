@@ -206,8 +206,9 @@ class ScalaInterpreterSpec extends FunSpec
     //       mapped futures -- this was too difficult for me to figure out
     //       in a short amount of time
     describe("#interpret") {
+
       it("should fail if not started") {
-        intercept[IllegalArgumentException] {
+        intercept[NullPointerException] {
           interpreter.interpret("val x = 3")
         }
       }

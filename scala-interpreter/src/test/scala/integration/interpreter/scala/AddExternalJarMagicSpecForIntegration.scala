@@ -52,7 +52,7 @@ class AddExternalJarMagicSpecForIntegration
       override protected def bindKernelVarialble(kernel: KernelLike): Unit = { }
     }
     val kernelLikeMocked = mock[KernelLike]
-    when(kernelLikeMocked.scalaInterpreterSettings ).thenReturn( new Settings())
+    when(kernelLikeMocked.scalaInterpreterSettings).thenReturn(new Settings())
 
     interpreter.init(kernelLikeMocked)
 
