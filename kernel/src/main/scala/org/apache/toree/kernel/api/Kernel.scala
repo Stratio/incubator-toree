@@ -418,10 +418,8 @@ class Kernel (
     )
     _scalaInterpreterSettings = s
 
-    logger.info( "Antonio - Initializating interpreter" )
+    logger.info( "Initializating interpreter" )
     interpreterManager.initializeInterpreters(this)
-
-
 
     conf
   }
