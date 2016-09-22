@@ -63,7 +63,7 @@ class ScalaInterpreter() extends Interpreter with ScalaInterpreterSpecific {
 
    override def init(kernel: KernelLike): Interpreter = {
 
-     logger.info("Initializating scala interpreter")
+     logger.info( "Initializating scala interpreter" )
      this.settings = kernel.scalaInterpreterSettings
      this.settings.classpath.value = buildClasspath(_thisClassloader)
      this.settings.embeddedDefaults(_runtimeClassloader)

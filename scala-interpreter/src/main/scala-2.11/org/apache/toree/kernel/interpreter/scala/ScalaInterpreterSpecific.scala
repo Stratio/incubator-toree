@@ -28,6 +28,7 @@ import scala.tools.nsc.interpreter.{JPrintWriter, IMain, JLineCompletion, IR}
 
 import scala.concurrent.Future
 import scala.tools.nsc.Settings
+import scala.util.Try
 
 trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
   private val ExecutionExceptionName = "lastException"
@@ -39,6 +40,13 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
     val s = new IMain(settings, out)
     s.initializeSynchronous()
     s
+  }
+
+  protected def refreshDefinitions(): Unit = {
+  }
+
+  protected def reinitializeSymbols(): Unit = {
+
   }
 
   /**
