@@ -15,7 +15,7 @@
 # limitations under the License
 #
 
-.PHONY: help clean clean-dist build test bin-release
+.PHONY: help clean build test bin-release
 
 # -----------------------------------------------------------------------
 #  Variables
@@ -78,5 +78,8 @@ dist: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell find .
 	@cp kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) dist/toree/lib/.
 	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
 
+# -----------------------------------------------------------------------
+#  make bin-release
+# -----------------------------------------------------------------------
 bin-release: dist
 	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
