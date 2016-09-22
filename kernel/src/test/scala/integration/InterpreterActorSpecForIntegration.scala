@@ -31,11 +31,13 @@ import org.apache.toree.kernel.protocol.v5.content._
 import org.apache.toree.kernel.protocol.v5.interpreter.InterpreterActor
 import org.apache.toree.kernel.protocol.v5.interpreter.tasks.InterpreterTaskFactory
 import org.apache.toree.utils.{MultiOutputStream, TaskManager}
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfter, FunSpecLike, Matchers}
 import test.utils.UncaughtExceptionSuppression
 
 import scala.concurrent.duration._
+import scala.tools.nsc.Settings
 
 object InterpreterActorSpecForIntegration {
   val config = """
@@ -75,7 +77,10 @@ class InterpreterActorSpecForIntegration extends TestKit(
 
   before {
     output.reset()
-    interpreter.init(mock[KernelLike])
+
+    val kernelLikeMocked = mock[KernelLike]
+    when(kernelLikeMocked.scalaInterpreterSettings).thenReturn(new Settings())
+    interpreter.init(kernelLikeMocked)
 
     interpreter.doQuietly({
       conf.set("spark.repl.class.uri", interpreter.classServerURI)
