@@ -1,3 +1,4 @@
+
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,34 +16,43 @@
 # limitations under the License
 #
 
-.PHONY: help clean build test bin-release
+.PHONY: help all change-version clean compile package deploy test integration-test info
 
 # -----------------------------------------------------------------------
 #  Variables
 # -----------------------------------------------------------------------
-VERSION?=0.1.0.stratio.dev4
-COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
-ifeq (, $(findstring dev, $(VERSION)))
-IS_SNAPSHOT?=false
-else
-IS_SNAPSHOT?=true
-SNAPSHOT:=-SNAPSHOT
-endif
+
+STRATIO_VERSION := $(shell cat VERSION)
+VERSION?=0.1.0.dev4.stratio.$(STRATIO_VERSION)
 
 APACHE_SPARK_VERSION?=1.6.2
 SCALA_VERSION?=2.11.7
 SCALA_BINARY_VERSION?=2.11
-ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(VERSION) IS_SNAPSHOT=$(IS_SNAPSHOT)
+ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(VERSION)
 ASSEMBLY_JAR:=toree-kernel-assembly-$(VERSION)$(SNAPSHOT).jar
 
 # -----------------------------------------------------------------------
 #  make help
 # -----------------------------------------------------------------------
 help:
-	@echo '      clean - clean build files'
-	@echo '       dist - build a directory with contents to package'
-	@echo '      build - builds assembly'
-	@echo '       test - run all units'
+	@echo '             clean - clean build files'
+	@echo '           compile - compile code'
+	@echo '           package - builds assembly'
+	@echo '              test - execute unit tests'
+	@echo '  integration-test - execute integration tests'
+	@echo '            deploy - deploy to repositories'
+	@echo '    change-version - update version'
+
+# -----------------------------------------------------------------------
+#  make all
+# -----------------------------------------------------------------------
+all: clean compile test package deploy
+
+# -----------------------------------------------------------------------
+#  make info
+# -----------------------------------------------------------------------
+info:
+	@echo "$(VERSION)"
 
 # -----------------------------------------------------------------------
 #  make clean
@@ -51,7 +61,14 @@ clean:
 	$(ENV_OPTS) sbt ++$(SCALA_VERSION) clean
 
 # -----------------------------------------------------------------------
-#  make build
+#  make compile
+# -----------------------------------------------------------------------
+compile: VM_WORKDIR=/src/toree-kernel
+compile:
+		$(ENV_OPTS) sbt ++$(SCALA_VERSION) compile
+
+# -----------------------------------------------------------------------
+#  make package
 # -----------------------------------------------------------------------
 kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): VM_WORKDIR=/src/toree-kernel
 kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): ${shell find ./*/src/main/**/*}
@@ -59,7 +76,14 @@ kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): ${shell find ./*/bu
 kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR): project/build.properties project/Build.scala project/Common.scala project/plugins.sbt
 	$(ENV_OPTS) sbt ++$(SCALA_VERSION) toree-kernel/assembly
 
-build: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR)
+package: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR)
+package: VERSION_FILE=dist/toree/VERSION
+package: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell find ./etc/bin/*}
+	@mkdir -p dist/toree/bin dist/toree/lib
+	@cp -r etc/bin/* dist/toree/bin/.
+	@cp kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) dist/toree/lib/.
+	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
+	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
 
 # -----------------------------------------------------------------------
 #  make test
@@ -69,17 +93,21 @@ test:
 	$(ENV_OPTS) sbt ++$(SCALA_VERSION) compile test
 
 # -----------------------------------------------------------------------
-#  make dist
+#  make integration-test
 # -----------------------------------------------------------------------
-dist: VERSION_FILE=dist/toree/VERSION
-dist: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell find ./etc/bin/*}
-	@mkdir -p dist/toree/bin dist/toree/lib
-	@cp -r etc/bin/* dist/toree/bin/.
-	@cp kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) dist/toree/lib/.
-	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
+integration-test:
+	@echo "Nothing to be done here."
 
 # -----------------------------------------------------------------------
-    #  make bin-release
+#  make deploy
 # -----------------------------------------------------------------------
-bin-release: dist
-	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
+deploy:
+	@echo "Nothing to be done here."
+	@echo "$(VERSION)"
+
+# -----------------------------------------------------------------------
+#  make change-version
+# -----------------------------------------------------------------------
+change-version:
+	echo "Modifying version to: $(version)"
+	echo $(version) > VERSION

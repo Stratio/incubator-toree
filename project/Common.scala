@@ -24,25 +24,20 @@ import scala.util.Properties
 object Common {
   //  Parameters for publishing to artifact repositories
   val versionNumber             = Properties.envOrElse("VERSION", "0.0.0-dev")
-  val snapshot                  = Properties.envOrElse("IS_SNAPSHOT","true").toBoolean
   val repoPort                  = Properties.envOrElse("REPO_PORT","")
   val repoHost                  = Properties.envOrElse("REPO_HOST","")
   val repoUsername              = Properties.envOrElse("REPO_USERNAME","")
   val repoPassword              = Properties.envOrElse("REPO_PASSWORD","")
-  val repoEndpoint              = Properties.envOrElse("REPO_ENDPOINT", if(snapshot) "/nexus/content/repositories/snapshots/" else "/nexus/content/repositories/releases/")
+  val repoEndpoint              = Properties.envOrElse("REPO_ENDPOINT","/nexus/content/repositories/releases/")
   val repoUrl                   = Properties.envOrElse("REPO_URL", s"http://${repoHost}:${repoPort}${repoEndpoint}")
 
 
   private val buildOrganization = "org.apache.toree"
-  private val buildVersion      =
-    if (snapshot) s"$versionNumber-SNAPSHOT"
-    else versionNumber
+  private val buildVersion      = versionNumber
 
   // Default version when NOT cross-compiling
   private val buildScalaVersion = "2.11.7"
-  private val buildCrossScalaVersions = Seq(
-    buildScalaVersion, "2.10.4"
-  )
+  private val buildCrossScalaVersions = Seq( buildScalaVersion, "2.10.4" )
 
   // Global dependencies provided to all projects
   private var buildLibraryDependencies = Seq(
@@ -87,7 +82,6 @@ object Common {
     scalaVersion := buildScalaVersion,
     crossScalaVersions := buildCrossScalaVersions,
     libraryDependencies ++= buildLibraryDependencies,
-    isSnapshot := snapshot,
 
     scalacOptions in (Compile, doc) ++= Seq(
       // Ignore packages (for Scaladoc) not from our project
