@@ -22,8 +22,7 @@
 #  Variables
 # -----------------------------------------------------------------------
 
-STRATIO_VERSION := $(shell cat VERSION)
-VERSION?=0.1.0.dev4.stratio.$(STRATIO_VERSION)
+VERSION := $(shell cat VERSION)
 
 APACHE_SPARK_VERSION?=1.6.2
 SCALA_VERSION?=2.11.7
@@ -83,7 +82,7 @@ package: kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) ${shell fin
 	@cp -r etc/bin/* dist/toree/bin/.
 	@cp kernel/target/scala-${SCALA_BINARY_VERSION}/$(ASSEMBLY_JAR) dist/toree/lib/.
 	@echo "VERSION: $(VERSION)" > $(VERSION_FILE)
-	@(cd dist; tar -cvzf toree-$(VERSION)-binary-release.tar.gz toree)
+	@(cd dist; tar -cvzf toree-$(VERSION).tar.gz toree)
 
 # -----------------------------------------------------------------------
 #  make test
