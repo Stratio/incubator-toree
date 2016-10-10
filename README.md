@@ -2,6 +2,8 @@
 [![License][license-badge]][license-url]
 [![Join the chat at https://gitter.im/ibm-et/spark-kernel][gitter-badge]][gitter-url]
 
+>> This fork is based on version: **0.1.0.dev4**
+
 Apache Toree
 ============
 The main goal of the Toree is to provide the foundation for interactive applications to connect to and use [Apache Spark][1].
