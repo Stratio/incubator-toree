@@ -30,11 +30,13 @@ import scala.concurrent.Future
 import scala.tools.nsc.Settings
 import scala.util.Try
 
-trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
+trait ScalaInterpreterSpecific {
+  this: ScalaInterpreter =>
   private val ExecutionExceptionName = "lastException"
 
   private var iMain: IMain = _
   private var jLineCompleter: JLineCompletion = _
+  private val exceptionHack = new ExceptionHack()
 
   protected def newIMain(settings: Settings, out: JPrintWriter): IMain = {
     val s = new IMain(settings, out)
@@ -50,39 +52,42 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
   }
 
   /**
-   * Adds jars to the runtime and compile time classpaths. Does not work with
-   * directories or expanding star in a path.
-   * @param jars The list of jar locations
-   */
+    * Adds jars to the runtime and compile time classpaths. Does not work with
+    * directories or expanding star in a path.
+    *
+    * @param jars The list of jar locations
+    */
   override def addJars(jars: URL*): Unit = {
     jars.foreach(_runtimeClassloader.addJar)
     iMain.addUrlsToClassPath(jars: _*)
   }
 
   /**
-   * Binds a variable in the interpreter to a value.
-   * @param variableName The name to expose the value in the interpreter
-   * @param typeName The type of the variable, must be the fully qualified class name
-   * @param value The value of the variable binding
-   * @param modifiers Any annotation, scoping modifiers, etc on the variable
-   */
+    * Binds a variable in the interpreter to a value.
+    *
+    * @param variableName The name to expose the value in the interpreter
+    * @param typeName     The type of the variable, must be the fully qualified class name
+    * @param value        The value of the variable binding
+    * @param modifiers    Any annotation, scoping modifiers, etc on the variable
+    */
   override def bind(
-    variableName: String,
-    typeName: String,
-    value: Any,
-    modifiers: List[String]
-  ): Unit = {
+                     variableName: String,
+                     typeName: String,
+                     value: Any,
+                     modifiers: List[String]
+                   ): Unit = {
     require(iMain != null)
     iMain.bind(variableName, typeName, value, modifiers)
   }
 
 
   /**
-   * Executes body and will not print anything to the console during the execution
-   * @param body The function to execute
-   * @tparam T The return type of body
-   * @return The return value of body
-   */
+    * Executes body and will not print anything to the console during the execution
+    *
+    * @param body The function to execute
+    * @tparam T The return type of body
+    * @return The return value of body
+    */
   override def doQuietly[T](body: => T): T = {
     require(iMain != null)
     iMain.beQuietDuring[T](body)
@@ -90,9 +95,10 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
 
 
   /**
-   * Stops the interpreter, removing any previous internal state.
-   * @return A reference to the interpreter
-   */
+    * Stops the interpreter, removing any previous internal state.
+    *
+    * @return A reference to the interpreter
+    */
   override def stop(): Interpreter = {
     logger.info("Shutting down interpreter")
 
@@ -112,14 +118,17 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
 
 
   /**
-   * Not available on Scala 2.11!
-   */
-  override def classServerURI: String = {""}
+    * Not available on Scala 2.11!
+    */
+  override def classServerURI: String = {
+    ""
+  }
 
   /**
-   * Returns the name of the variable created from the last execution.
-   * @return Some String name if a variable was created, otherwise None
-   */
+    * Returns the name of the variable created from the last execution.
+    *
+    * @return Some String name if a variable was created, otherwise None
+    */
   override def lastExecutionVariableName: Option[String] = {
     require(iMain != null)
 
@@ -133,18 +142,19 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
   }
 
   /**
-   * Mask the Console and System objects with our wrapper implementations
-   * and dump the Console methods into the public namespace (similar to
-   * the Predef approach).
-   * @param in The new input stream
-   * @param out The new output stream
-   * @param err The new error stream
-   */
+    * Mask the Console and System objects with our wrapper implementations
+    * and dump the Console methods into the public namespace (similar to
+    * the Predef approach).
+    *
+    * @param in  The new input stream
+    * @param out The new output stream
+    * @param err The new error stream
+    */
   override def updatePrintStreams(
-    in: InputStream,
-    out: OutputStream,
-    err: OutputStream
-  ): Unit = {
+                                   in: InputStream,
+                                   out: OutputStream,
+                                   err: OutputStream
+                                 ): Unit = {
     val inReader = new BufferedReader(new InputStreamReader(in))
     val outPrinter = new PrintStream(out)
     val errPrinter = new PrintStream(err)
@@ -165,27 +175,29 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
   }
 
   /**
-   * Retrieves the contents of the variable with the provided name from the
-   * interpreter.
-   * @param variableName The name of the variable whose contents to read
-   * @return An option containing the variable contents or None if the
-   *         variable does not exist
-   */
+    * Retrieves the contents of the variable with the provided name from the
+    * interpreter.
+    *
+    * @param variableName The name of the variable whose contents to read
+    * @return An option containing the variable contents or None if the
+    *         variable does not exist
+    */
   override def read(variableName: String): Option[AnyRef] = {
     require(iMain != null)
     val variable = iMain.valueOfTerm(variableName)
     if (variable == null || variable.isEmpty) None
     else variable match {
-      case Some(v: AnyRef)  => Some(v)
-      case Some(_)          => None // Don't support AnyVal yet
-      case None             => None
+      case Some(v: AnyRef) => Some(v)
+      case Some(_) => None // Don't support AnyVal yet
+      case None => None
     }
   }
 
   /**
-   * Starts the interpreter, initializing any internal state.
-   * @return A reference to the interpreter
-   */
+    * Starts the interpreter, initializing any internal state.
+    *
+    * @return A reference to the interpreter
+    */
   override def start(): Interpreter = {
     require(iMain == null && taskManager == null)
 
@@ -209,17 +221,21 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
       //   ADD IMPORTS generates too many classes, client is responsible for adding import
       logger.debug("Adding org.apache.spark.SparkContext._ to imports")
       iMain.interpret("import org.apache.spark.SparkContext._")
+      logger.debug("Adding the hack for the exception handling retrieval.")
+      iMain.bind("_exceptionHack", classOf[ExceptionHack].getName, exceptionHack, List("@transient"))
+
     }
 
     this
   }
 
   /**
-   * Attempts to perform code completion via the <TAB> command.
-   * @param code The current cell to complete
-   * @param pos The cursor position
-   * @return The cursor position and list of possible completions
-   */
+    * Attempts to perform code completion via the <TAB> command.
+    *
+    * @param code The current cell to complete
+    * @param pos  The cursor position
+    * @return The cursor position and list of possible completions
+    */
   override def completion(code: String, pos: Int): (Int, List[String]) = {
     require(jLineCompleter != null)
 
@@ -233,7 +249,9 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
     (result.cursor, result.candidates)
   }
 
-  protected def newSettings(args: List[String]): Settings = { new Settings() }
+  protected def newSettings(args: List[String]): Settings = {
+    new Settings()
+  }
 
   protected def interpretAddTask(code: String, silent: Boolean): Future[IR.Result] = {
     taskManager.add {
@@ -250,45 +268,71 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
     }
   }
 
+  private def retrieveLastException: Throwable = {
+    iMain.beSilentDuring {
+      iMain.interpret("_exceptionHack.lastException = lastException")
+    }
+    exceptionHack.lastException
+  }
+
+  private def clearLastException(): Unit = {
+    iMain.directBind(
+      ExecutionExceptionName,
+      classOf[Throwable].getName,
+      null
+    )
+    exceptionHack.lastException = null
+  }
+
   protected def interpretMapToResultAndExecuteInfo(
-    future: Future[(Results.Result, String)]
-  ): Future[(Results.Result, Either[ExecuteOutput, ExecuteFailure])] = {
+                                                    future: Future[(Results.Result, String)]
+                                                  ): Future[(Results.Result, Either[ExecuteOutput, ExecuteFailure])] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     future map {
-      case (Results.Success, output)    => (Results.Success, Left(output))
+      case (Results.Success, output) => (Results.Success, Left(output))
       case (Results.Incomplete, output) => (Results.Incomplete, Left(output))
-      case (Results.Aborted, output)    => (Results.Aborted, Right(null))
-      case (Results.Error, output)      =>
+      case (Results.Aborted, output) => (Results.Aborted, Right(null))
+      case (Results.Error, output) =>
+        val ex = Some(retrieveLastException)
         (
           Results.Error,
           Right(
             interpretConstructExecuteError(
-              read(ExecutionExceptionName),
+              ex,
               output
             )
           )
-        )
+          )
     }
   }
 
   protected def interpretConstructExecuteError(
-    value: Option[AnyRef],
-    output: String
-  ) = value match {
+                                                value: Option[AnyRef],
+                                                output: String
+                                              ) = value match {
     // Runtime error
     case Some(e) if e != null =>
       val ex = e.asInstanceOf[Throwable]
-      // Clear runtime error message
-      iMain.directBind(
-        ExecutionExceptionName,
-        classOf[Throwable].getName,
-        null
-      )
+      clearLastException()
+
+      // The scala REPL does a pretty good job of returning us a stack trace that is free from all the bits that the
+      // interpreter uses before it.
+      //
+      // The REPL emits its message as something like this, so trim off the first and last element
+      //
+      //    java.lang.ArithmeticException: / by zero
+      //    at failure(<console>:17)
+      //    at call_failure(<console>:19)
+      //    ... 40 elided
+
+      val formattedException = output.split("\n")
+
       ExecuteError(
         ex.getClass.getName,
         ex.getLocalizedMessage,
-        ex.getStackTrace.map(_.toString).toList
+        formattedException.slice(1, formattedException.size - 1).toList
       )
+
     // Compile time error, need to check internal reporter
     case _ =>
       if (iMain.reporter.hasErrors)
@@ -299,6 +343,18 @@ trait ScalaInterpreterSpecific { this: ScalaInterpreter =>
           "Compile Error", output, List()
         )
       else
-        ExecuteError("Unknown", "Unable to retrieve error!", List())
+        // May as capture the output here.  Could be useful
+        ExecuteError("Unknown Error", output, List())
   }
+}
+
+/**
+  * Due to a bug in the scala interpreter under scala 2.11 (SI-8935) with IMain.valueOfTerm we can hack around it by
+  * binding an instance of ExceptionHack into iMain and interpret the "_exceptionHack.lastException = lastException".
+  * This makes it possible to extract the exception.
+  *
+  * TODO: Revisit this once Scala 2.12 is released.
+  */
+class ExceptionHack {
+  var lastException: Throwable = _
 }
