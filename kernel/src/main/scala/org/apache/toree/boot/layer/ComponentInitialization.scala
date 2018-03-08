@@ -100,7 +100,16 @@ trait StandardComponentInitialization extends ComponentInitialization {
 
   def initializeSparkContext(config:Config, kernel:Kernel, appName:String) = {
     if(!config.getBoolean("nosparkcontext")) {
-      kernel.createSparkContext(config.getString("spark.master"), appName)
+      val sparkAppName: String = if(config.hasPath("spark.app.name")){
+        if (config.getString("spark.app.name") == "org.apache.toree.Main")
+          appName
+        else
+          config.getString("spark.app.name")
+      } else {
+        appName
+      }
+
+      kernel.createSparkContext(config.getString("spark.master"), sparkAppName)
     }
   }
 
