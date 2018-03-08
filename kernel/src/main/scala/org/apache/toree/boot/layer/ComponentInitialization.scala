@@ -85,7 +85,7 @@ trait StandardComponentInitialization extends ComponentInitialization {
     initializeSparkContext(config, kernel)
 
     interpreterManager.initializeInterpreters(kernel)
-    
+
     pluginManager.fireEvent(AllInterpretersReady)
 
     val responseMap = initializeResponseMap()
