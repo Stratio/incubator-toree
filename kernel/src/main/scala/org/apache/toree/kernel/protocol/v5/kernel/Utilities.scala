@@ -24,7 +24,7 @@ import org.apache.toree.communication.ZMQMessage
 import org.apache.toree.kernel.protocol.v5._
 import org.apache.toree.utils.LogLike
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, Json, Reads}
+import play.api.libs.json.{JsPath, Json, Reads, JsValue, JsObject, JsString}
 
 import scala.concurrent.duration._
 
@@ -66,7 +66,23 @@ object Utilities extends LogLike {
                                   handler = (valid: ParentHeader) => valid,
                                   errHandler = _ => null
     )
-    val metadata = Json.parse(message.frames(delimiterIndex + 4)).as[Metadata]
+
+    // SI modification to not parse metadata whose values are not strings since toree
+    // defines metadata as being Map[String, String] but the fron might send other
+    // things inside the metadata.
+    def _onlyStringValues(json: JsValue): JsValue = json match {
+      case JsObject(fields) => JsObject(
+        fields flatMap {
+          case jval @ (_, JsString(_)) => Some(jval)
+          case _ => None
+        })
+      case other => other
+    }
+
+    // val metadata = Json.parse(message.frames(delimiterIndex + 4)).as[Metadata]
+    val metadata = _onlyStringValues(Json.parse(message.frames(delimiterIndex + 4))).as[Metadata]
+
+    // /SI modification
 
     KMBuilder().withIds(ids.toList)
                .withSignature(message.frame(delimiterIndex + 1))
