@@ -2,7 +2,7 @@
 
 Only listing significant user-visible, not internal code cleanups and minor bug fixes.
 
-## 0.1.0 (upcoming)
+## 0.1.0 (September 03, 2018)
 
 * Integration with continiuos delivery
 * Make app name configurable
