@@ -14,4 +14,4 @@ BASEDIR=`dirname $0`/..
 PKG=$BASEDIR/dist/toree-bin/toree-${VERSION}.tar.gz
 
 echo "Uploading to Nexus..."
-curl -u stratio:${NEXUSPASS} --upload-file $PKG http://sodio.stratio.com/nexus/content/sites/paas/toree/${VERSION}/
+curl -u stratio:${NEXUSPASS} --upload-file $PKG http://sodio.stratio.com/repository/paas/toree/${VERSION}/
