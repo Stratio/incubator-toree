@@ -19,7 +19,7 @@
 
 BASE_VERSION?=0.3.0
 # Env variable version is set by Jenkins, it will be only the Stratio part
-FINAL_VERSION=$(BASE_VERSION)-incubating-$(VERSION)
+FINAL_VERSION=$(BASE_VERSION)-incubating-$(version)
 COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
 
 # This was used by the original makefile, we leave it...
