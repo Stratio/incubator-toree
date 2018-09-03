@@ -15,10 +15,14 @@
 # limitations under the License.
 #
 
-# Mac
-.DS_Store
+build-tools/
 
-# Intellij
+build/
+**/derby.log
+**/metastore_db
+**/*__pycache__
+**.swp
+target/
 .idea/
 .idea_modules/
 *.iml
