@@ -58,6 +58,10 @@ package: build dist bin-release
 deploy:
 	$(call RUN,$(ENV_OPTS) ./bin/deploy.sh)
 
+# Jenkins needs this target even if it does nothing
+change-version:
+	@echo 'Noting to do here...'
+
 build-info:
 	@echo '$(ENV_OPTS) $(FINAL_VERSION)'
 
