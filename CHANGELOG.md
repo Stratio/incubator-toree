@@ -6,7 +6,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 * Pending changelog
 
-## 0.1.0-491c615 (Built: September 03, 2018 | Pre-release)
+## 0.1.0-491c615 (Built: September 03, 2018 | Released: September 14, 2018)
 
 * Integration with continiuos delivery
 * Make app name configurable
