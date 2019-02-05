@@ -46,10 +46,10 @@ help:
 	@echo '    deploy - uploads the tar.gz package to nexus'
 
 download-sbt:
-	@wget http://tools.stratio.com/buildtools/sbt-1.1.6.tgz
+	@wget http://tools.stratio.com/buildtools/sbt-1.2.1.tgz
 	@mkdir -p ./build-tools/sbt
-	@tar -xzf ./sbt-1.1.6.tgz -C ./build-tools/
-	@rm ./sbt-1.1.6.tgz
+	@tar -xzf ./sbt-1.2.1.tgz -C ./build-tools/
+	@rm ./sbt-1.2.1.tgz
 build: download-sbt
 clean: download-sbt
 
