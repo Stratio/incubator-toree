@@ -44,7 +44,6 @@ fi
 
 eval exec \
      "${SPARK_HOME}/bin/spark-submit" \
-     --name "'Apache Toree'" \
      "${SPARK_OPTS}" \
      --class org.apache.toree.Main \
      "${TOREE_ASSEMBLY}" \
