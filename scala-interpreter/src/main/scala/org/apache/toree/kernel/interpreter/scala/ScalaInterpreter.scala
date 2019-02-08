@@ -219,7 +219,7 @@ class ScalaInterpreter(private val config:Config = ConfigFactory.load) extends I
   def prepareResult(interpreterOutput: String,
                     showType: Boolean = KernelOptions.showTypes, // false
                     noTruncate: Boolean = KernelOptions.noTruncation, // false
-                    showOutput: Boolean = KernelOptions.showOutput // true
+                    showOutput: Boolean = KernelOptions.showOutput // false
                    ): (Option[AnyRef], Option[String], Option[String]) = {
     if (interpreterOutput.isEmpty) {
       return (None, None, None)
