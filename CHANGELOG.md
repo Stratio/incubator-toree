@@ -2,7 +2,7 @@
 
 Only listing significant user-visible, not internal code cleanups and minor bug fixes.
 
-## 0.2.0 (February 08, 2019)
+## 0.2.0 (February 20, 2019)
 
 * Update upstream toree to 0.3.0-incubating
 * Do not crash interpreter when receiving a code error
