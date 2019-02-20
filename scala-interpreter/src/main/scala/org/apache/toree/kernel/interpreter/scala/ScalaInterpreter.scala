@@ -339,8 +339,8 @@ class ScalaInterpreter(private val config:Config = ConfigFactory.load) extends I
          lastResultOut.reset()
 
          val (obj, defStr, text) = prepareResult(lastOutput, KernelOptions.showTypes, KernelOptions.noTruncation, KernelOptions.showOutput )
-         defStr.foreach(kernel.display.content(MIMEType.PlainText, _))
-         text.foreach(kernel.display.content(MIMEType.PlainText, _))
+         // defStr.foreach(kernel.display.content(MIMEType.PlainText, _))
+         // text.foreach(kernel.display.content(MIMEType.PlainText, _))
          val output = obj.map(Displayers.display(_).asScala.toMap).getOrElse(Map.empty)
          (result, Left(output))
 
@@ -348,9 +348,9 @@ class ScalaInterpreter(private val config:Config = ConfigFactory.load) extends I
          val lastOutput = lastResultOut.toString("UTF-8").trim
          lastResultOut.reset()
 
-         val (obj, defStr, text) = prepareResult(lastOutput)
+         val (obj, defStr, text) = prepareResult(lastOutput, KernelOptions.showTypes, KernelOptions.noTruncation, true)
          defStr.foreach(kernel.display.content(MIMEType.PlainText, _))
-         val output = interpretConstructExecuteError(text.get)
+         val output = interpretConstructExecuteError(text.getOrElse(""))
          (Results.Error, Right(output))
 
        case Results.Aborted =>
