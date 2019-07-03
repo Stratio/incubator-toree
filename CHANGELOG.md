@@ -4,7 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.3.0 (upcoming)
 
-* Pending changelog
+* fix scala version to 2.11.8 and spark version to 2.2.0
 
 ## 0.2.0-9f0ea54 (Built: February 20, 2019 | Pre-release)
 
