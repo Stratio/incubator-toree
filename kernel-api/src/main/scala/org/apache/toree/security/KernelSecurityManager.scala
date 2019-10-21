@@ -123,11 +123,7 @@ class KernelSecurityManager extends SecurityManager {
     if (g == null) return
 
     val parentGroup = g.getParent
-
-    if (parentGroup != null &&
-      parentGroup.getName == RestrictedGroupName &&
-      g.getName != RestrictedGroupName)
-      throw new SecurityException("Not allowed to modify ThreadGroups!")
+    // parentGroup name check removed
   }
 
   override def checkExit(status: Int): Unit = {
