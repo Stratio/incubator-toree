@@ -6,7 +6,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 * Pending changelog
 
-## 0.2.0-9f0ea54 (Built: February 20, 2019 | Pre-release)
+## 0.2.0-ca9cbea (Built: October 22, 2019 | Pre-release)
 
 * Update upstream toree to 0.3.0-incubating
 * Do not crash interpreter when receiving a code error
