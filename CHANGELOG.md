@@ -5,6 +5,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 ## 0.3.0 (upcoming)
 
 * [LDG-994] Remove threadgroup check to allow Ignite from Intelligence
+* [LDG-994] Update Spring version
 
 ## 0.2.0-ca9cbea (Built: October 22, 2019 | Released: October 22, 2019)
 
