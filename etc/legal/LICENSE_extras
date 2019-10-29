@@ -22,7 +22,7 @@ Apache License 2.0
    io.get-coursier:coursier-cache_2.11:1.0.0-RC10 -> https://github.com/coursier/coursier/blob/master/LICENSE
    io.get-coursier:coursier_2.11:1.0.0-RC10 -> https://github.com/coursier/coursier/blob/master/LICENSE
    joda-time:joda-time:2.3 -> https://github.com/JodaOrg/joda-time/blob/master/LICENSE.txt
-   org.springframework:spring-core:4.1.1.RELEASE
+   org.springframework:spring-core:4.3.18.RELEASE
    org.apache.commons:commons-exec:1.3 -> https://github.com/apache/commons-exec/blob/trunk/LICENSE.txt
    org.joda:joda-convert:1.6 -> https://github.com/JodaOrg/joda-convert/blob/master/LICENSE.txt
 
