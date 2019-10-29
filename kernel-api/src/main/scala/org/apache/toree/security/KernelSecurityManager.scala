@@ -41,7 +41,7 @@ object KernelSecurityManager {
    * is found in the keys and the value for that permission is true.
    */
   private val permissionsToCheck: Map[String, Boolean] = HashMap(
-    "modifyThreadGroup" -> true
+    "modifyThreadGroup" -> false
   )
 
   /**
@@ -88,9 +88,6 @@ class KernelSecurityManager extends SecurityManager {
     if (perm.getActions == "read" &&
       perm.getName.contains(this.getClass.getSimpleName))
       return
-
-    if (shouldCheckPermission(perm.getName))
-      super.checkPermission(perm, context)
   }
 
   override def checkPermission(perm: Permission): Unit = {
@@ -100,9 +97,6 @@ class KernelSecurityManager extends SecurityManager {
     if (perm.getActions == "read" &&
       perm.getName.contains(this.getClass.getSimpleName))
       return
-
-    if (shouldCheckPermission(perm.getName))
-      super.checkPermission(perm)
   }
 
   override def getThreadGroup: ThreadGroup = {
