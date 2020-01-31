@@ -7,6 +7,7 @@ hose {
     PKGMODULESNAMES = ['stratio-toree']
     DEVTIMEOUT = 60
     RELEASETIMEOUT = 60
+    ANCHORE_TEST = true
     NEW_VERSIONING = true
     BUILDTOOL = 'make'
     DEV = { config ->
