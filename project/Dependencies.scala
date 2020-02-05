@@ -65,7 +65,7 @@ object Dependencies {
   val sparkSql = Def.setting{ "org.apache.spark" %% "spark-sql" % sparkVersion.value } // Apache v2
   val sparkStreaming = Def.setting{ "org.apache.spark" %% "spark-streaming" % sparkVersion.value } // Apache v2
 
-  val springCore = "org.springframework" % "spring-core" % "5.2.2.RELEASE"// Apache v2
+  val springCore = "org.springframework" % "spring-core" % "4.3.18.RELEASE"// Apache v2
 
   val guava = "com.google.guava" % "guava" % "14.0.1" // Apache v2
 
@@ -79,7 +79,7 @@ object Dependencies {
           organization = "org.jboss.netty",
           name = "netty"
         )
-      ),
+        ),
       sparkGraphX.value % "provided",
       sparkMllib.value % "provided",
       sparkRepl.value % "provided",

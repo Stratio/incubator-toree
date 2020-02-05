@@ -25,7 +25,7 @@ COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
 # This was used by the original makefile, we leave it...
 IS_SNAPSHOT?=false
 
-APACHE_SPARK_VERSION?=2.2.2
+APACHE_SPARK_VERSION?=2.4.4
 SCALA_VERSION?=2.11
 
 # USE_VAGRANT?=
