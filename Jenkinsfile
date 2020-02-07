@@ -2,9 +2,7 @@
 
 hose {
     EMAIL = 'intelligence'
-    MODULE = 'stratio-intelligence-toree'
-    REPOSITORY = 'incubator-toree'
-    PKGMODULESNAMES = ['stratio-toree']
+    PKGMODULESNAMES = ['incubator-toree']
     DEVTIMEOUT = 60
     RELEASETIMEOUT = 60
     ANCHORE_TEST = true
