@@ -26,7 +26,7 @@ crossScalaVersions in ThisBuild := Seq("2.11.12")
 scalaVersion in ThisBuild := (crossScalaVersions in ThisBuild).value.head
 Dependencies.sparkVersion in ThisBuild := {
   val envVar = "APACHE_SPARK_VERSION"
-  val defaultVersion = "2.4.4"
+  val defaultVersion = "2.0.0"
 
   Properties.envOrNone(envVar) match {
     case None =>
@@ -104,15 +104,15 @@ pomExtra in ThisBuild := {
     <artifactId>apache</artifactId>
     <version>10</version>
   </parent>
-  <url>http://toree.incubator.apache.org/</url>
-  <scm>
-    <url>git@github.com:apache/incubator-toree.git</url>
-    <connection>scm:git:git@github.com:apache/incubator-toree.git</connection>
-    <developerConnection>
-      scm:git:https://git-wip-us.apache.org/repos/asf/incubator-toree.git
-    </developerConnection>
-    <tag>HEAD</tag>
-  </scm>
+    <url>http://toree.incubator.apache.org/</url>
+    <scm>
+      <url>git@github.com:apache/incubator-toree.git</url>
+      <connection>scm:git:git@github.com:apache/incubator-toree.git</connection>
+      <developerConnection>
+        scm:git:https://git-wip-us.apache.org/repos/asf/incubator-toree.git
+      </developerConnection>
+      <tag>HEAD</tag>
+    </scm>
 }
 credentials in ThisBuild+= Credentials(Path.userHome / ".ivy2" / ".credentials")
 
@@ -159,37 +159,37 @@ lazy val communication = (project in file("communication"))
   .dependsOn(macros, protocol)
 
 /**
-* Project representing the kernel-api code used by the Spark Kernel. Others can
-* import this to implement their own magics and plugins.
-*/
+  * Project representing the kernel-api code used by the Spark Kernel. Others can
+  * import this to implement their own magics and plugins.
+  */
 lazy val kernelApi = (project in file("kernel-api"))
   .settings(name := "toree-kernel-api")
   .dependsOn(macros, plugins)
 
 /**
-* Project representing the client code for connecting to the kernel backend.
-*/
+  * Project representing the client code for connecting to the kernel backend.
+  */
 lazy val client = (project in file("client"))
   .settings(name := "toree-client")
   .dependsOn(macros, protocol, communication)
 
 /**
-* Project represents the scala interpreter used by the Spark Kernel.
-*/
+  * Project represents the scala interpreter used by the Spark Kernel.
+  */
 lazy val scalaInterpreter = (project in file("scala-interpreter"))
   .settings(name := "toree-scala-interpreter")
   .dependsOn(plugins, protocol, kernelApi)
 
 /**
-* Project represents the SQL interpreter used by the Spark Kernel.
-*/
+  * Project represents the SQL interpreter used by the Spark Kernel.
+  */
 lazy val sqlInterpreter = (project in file("sql-interpreter"))
   .settings(name := "toree-sql-interpreter")
   .dependsOn(plugins, protocol, kernelApi, scalaInterpreter)
 
 /**
-* Project representing the kernel code for the Spark Kernel backend.
-*/
+  * Project representing the kernel code for the Spark Kernel backend.
+  */
 lazy val kernel = (project in file("kernel"))
   .settings(name := "toree-kernel")
   .dependsOn(
