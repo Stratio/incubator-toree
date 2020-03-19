@@ -2,7 +2,11 @@
 
 Only listing significant user-visible, not internal code cleanups and minor bug fixes.
 
-## 0.3.0 (upcoming)
+## 0.4.0 (upcoming)
+
+* Pending changelog
+
+## 0.3.0-2dd6ee6 (Built: March 19, 2020 | Pre-release)
 
 * [LDG-994] Remove threadgroup check to allow Ignite from Intelligence
 * [LDG-994] Update Spring version
