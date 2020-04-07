@@ -144,6 +144,7 @@ class KernelBootstrap(config: Config) extends LogLike {
 
     logger.info("Marking relay as ready for receiving messages")
     kernelMessageRelayActor ! true
+    interpreters foreach {_.postInit()}
 
     val endNanos: Double = System.nanoTime()
     logger.trace(s"Kernel bootstrap took ${(endNanos - startNanos) / 1000000000}s")

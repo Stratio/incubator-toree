@@ -99,6 +99,13 @@ class ScalaInterpreter(private val config:Config = ConfigFactory.load) extends I
      this
    }
 
+  override def postInit(): Unit =
+
+  {
+    bindSparkSession()
+    bindSparkContext()
+  }
+
   /**
    * Start initialization with only the given config
    *
