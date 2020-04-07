@@ -267,13 +267,14 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
    * Starts the interpreter, initializing any internal state.
    * @return A reference to the interpreter
    */
-  override def start(): ScalaInterpreter = {
+  override def start(): Interpreter = {
     require(iMain == null && taskManager == null)
 
     taskManager = newTaskManager()
 
     logger.debug("Initializing task manager")
     taskManager.start()
+
     iMain = newIMain(settings, new JPrintWriter(lastResultOut, true))
 
     //logger.debug("Initializing interpreter")
