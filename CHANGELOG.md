@@ -4,7 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.4.0 (upcoming)
 
-* Pending changelog
+* Update upstream toree to 0.4.0-incubating
 
 ## 0.3.0-2dd6ee6 (Built: March 19, 2020 | Released: March 19, 2020)
 
