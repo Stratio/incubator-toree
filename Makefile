@@ -20,7 +20,7 @@
      dev-binder \
      audit audit-licenses
 
-BASE_VERSION?=0.6.0.dev1
+BASE_VERSION?=0.6.0
 # Env variable version is set by Jenkins, it will be only the Stratio part
 FINAL_VERSION=$(BASE_VERSION)-incubating-$(version)
 COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
