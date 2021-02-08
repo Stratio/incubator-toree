@@ -15,22 +15,50 @@
 # limitations under the License
 #
 
-.PHONY: help clean clean-dist build dev test system-test test-travis release pip-release bin-release dev-binder .binder-image audit audit-licenses
+.PHONY: help clean clean-dist .clean-binder-image .clean-toree-dev-image \
+     build dev test system-test test-travis release pip-release bin-release \
+     dev-binder \
+     audit audit-licenses
 
-BASE_VERSION?=0.3.0
+BASE_VERSION?=0.6.0
 # Env variable version is set by Jenkins, it will be only the Stratio part
 FINAL_VERSION=$(BASE_VERSION)-incubating-$(version)
 COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
 
-# This was used by the original makefile, we leave it...
+VERSION=$(BASE_VERSION)-incubating
+COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
+ifeq (, $(findstring dev, $(FINAL_VERSION)))
 IS_SNAPSHOT?=false
+else
+IS_SNAPSHOT?=true
+SNAPSHOT:=-SNAPSHOT
+endif
 
-APACHE_SPARK_VERSION?=2.4.4
-SCALA_VERSION?=2.11
+APACHE_SPARK_VERSION?=3.0.0
+SCALA_VERSION?=2.12
+IMAGE?=jupyter/all-spark-notebook:latest
+EXAMPLE_IMAGE?=apache/toree-examples
+TOREE_DEV_IMAGE?=apache/toree-dev
+GPG?=gpg
+GPG_PASSWORD?=
+BINDER_IMAGE?=apache/toree-binder
+DOCKER_WORKDIR?=/srv/toree
+DOCKER_ARGS?=
+define DOCKER
+docker run -t --rm \
+	--workdir $(DOCKER_WORKDIR) \
+	-e PYTHONPATH='/srv/toree' \
+	-v `pwd`:/srv/toree $(DOCKER_ARGS)
+endef
 
-# USE_VAGRANT?=
-# RUN_PREFIX=$(if $(USE_VAGRANT),vagrant ssh -c "cd $(VM_WORKDIR) && )
-# RUN_SUFFIX=$(if $(USE_VAGRANT),")
+define GEN_PIP_PACKAGE_INFO
+printf "__version__ = '$(BASE_VERSION)'\n" >> dist/toree-pip/toree/_version.py
+printf "__commit__ = '$(COMMIT)'\n" >> dist/toree-pip/toree/_version.py
+endef
+
+USE_VAGRANT?=
+RUN_PREFIX=$(if $(USE_VAGRANT),vagrant ssh -c "cd $(VM_WORKDIR) && )
+RUN_SUFFIX=$(if $(USE_VAGRANT),")
 
 RUN=$(RUN_PREFIX)$(1)$(RUN_SUFFIX)
 
@@ -39,11 +67,13 @@ ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(FINAL_VERSION) 
 ASSEMBLY_JAR:=toree-assembly-$(FINAL_VERSION)$(SNAPSHOT).jar
 
 help:
-	@echo '			clean - clean build files'
-	@echo '			 dist - build a directory with contents to package'
-	@echo '			build - builds assembly'
-	@echo '   package - builds and creates tar.gz with package'
-	@echo '    deploy - uploads the tar.gz package to nexus'
+	@echo '	'
+	@echo '	clean - clean build files'
+	@echo '	dist - build a directory with contents to package'
+	@echo '	build - builds assembly'
+	@echo ' package - builds and creates tar.gz with package'
+	@echo ' deploy - uploads the tar.gz package to nexus'
+	@echo '	'
 
 download-sbt:
 	@wget http://tools.stratio.com/buildtools/sbt-1.2.1.tgz
@@ -71,7 +101,30 @@ clean-dist:
 clean: VM_WORKDIR=/src/toree-kernel
 clean: clean-dist
 	$(call RUN,$(ENV_OPTS) build-tools/sbt/bin/sbt clean)
-	rm -r `find . -name target -type d`
+	-find . -name target -type d -exec rm -fr {} +
+	-find . -name .ipynb_checkpoints  -type d -exec rm -fr {} +
+
+.clean-toree-dev-image:
+	@rm -f .toree-dev-image
+	@-docker rmi -f $(TOREE_DEV_IMAGE)
+
+.toree-dev-image:
+	@docker build -t $(TOREE_DEV_IMAGE) -f Dockerfile.toree-dev .
+	touch $@
+
+.clean-binder-image:
+	@rm -f .binder-image
+	@-docker rmi -f $(BINDER_IMAGE)
+
+.binder-image: .clean-binder-image
+	@docker build --rm -t $(BINDER_IMAGE) .
+	touch $@
+
+dev-binder: .binder-image
+	@docker run --rm -t -p 8888:8888	\
+		-v `pwd`:/home/main/notebooks \
+		--workdir /home/main/notebooks $(BINDER_IMAGE) \
+		/home/main/start-notebook.sh --ip=0.0.0.0
 
 target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): VM_WORKDIR=/src/toree-kernel
 target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): ${shell find ./*/src/main/**/*}
@@ -98,6 +151,10 @@ dist/toree/VERSION:
 	@echo "VERSION: $(FINAL_VERSION)" > dist/toree/VERSION
 	@echo "COMMIT: $(COMMIT)" >> dist/toree/VERSION
 
+dist/toree/logo-64x64.png:
+	@mkdir -p dist/toree
+	@cp -r etc/logo-64x64.png dist/toree/logo-64x64.png
+
 dist/toree-legal/LICENSE: LICENSE etc/legal/LICENSE_extras
 	@mkdir -p dist/toree-legal
 	@cat LICENSE > dist/toree-legal/LICENSE
@@ -117,7 +174,7 @@ dist/toree-legal/DISCLAIMER:
 dist/toree-legal: dist/toree-legal/LICENSE dist/toree-legal/NOTICE dist/toree-legal/DISCLAIMER
 	@cp -R etc/legal/licenses dist/toree-legal/.
 
-dist/toree: dist/toree/VERSION dist/toree-legal dist/toree/lib dist/toree/bin RELEASE_NOTES.md
+dist/toree: dist/toree/VERSION dist/toree/logo-64x64.png dist/toree-legal dist/toree/lib dist/toree/bin RELEASE_NOTES.md
 	@cp -R dist/toree-legal/* dist/toree
 	@cp RELEASE_NOTES.md dist/toree/RELEASE_NOTES.md
 

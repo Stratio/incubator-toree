@@ -25,8 +25,8 @@ RUN curl -sL https://deb.nodesource.com/setup_0.12 | bash - && \
     apt-get install -y nodejs npm && \
     npm install -g bower
 
-# for pyspark demos
-ENV APACHE_SPARK_VERSION 2.2.0
+# for Apache Spark demos
+ENV APACHE_SPARK_VERSION 2.3.4
 
 RUN apt-get -y update && \
     apt-get -y install software-properties-common

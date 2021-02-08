@@ -4,7 +4,8 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.4.0 (upcoming)
 
-* Pending changelog
+* Update upstream toree to 0.5.0-incubating
+* [ROCK-3840] Update to Scala 2.12 and Spark 3
 
 ## 0.3.0-2dd6ee6 (Built: March 19, 2020 | Released: March 19, 2020)
 

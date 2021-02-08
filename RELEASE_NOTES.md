@@ -19,6 +19,23 @@
 
 # RELEASE_NOTES
 
+## 0.4.0-incubating (2020.07)
+
+* Properly reply errors to iopub.error
+* Update dependency versions to match Spark 2.3.x
+* Various small bugfixes
+* Various small build updates/cleanup
+
+## 0.3.0-incubating (2018.11)
+
+* Fix JupyterLab support after the introduction of new cell metadata information
+* Support for high-order functions
+* Fix %Showtypes and %Truncate magics
+* Added %ShowOutput magic to disable console output
+* Added support for custom resolvers for %AddDeps magic
+* Added support for predefined variables in SQL Statements
+* Removed support for PySpark and Spark R in Toree (use specific kernels)
+
 ## 0.2.0-incubating (2018.08)
 
 * Support Apache Spark 2.x codebase including Spark 2.2.2
