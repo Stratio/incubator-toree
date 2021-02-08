@@ -79,6 +79,14 @@ help:
 	@echo '	jupyter - starts a docker image with Jupyter Notebook with Toree installed'
 	@echo '	'
 
+download-sbt:
+	@wget http://tools.stratio.com/buildtools/sbt-1.2.1.tgz
+	@mkdir -p ./build-tools/sbt
+	@tar -xzf ./sbt-1.2.1.tgz -C ./build-tools/
+	@rm ./sbt-1.2.1.tgz
+build: download-sbt
+clean: download-sbt
+
 package: build dist bin-release
 
 deploy:
