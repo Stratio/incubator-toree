@@ -21,9 +21,13 @@
      audit audit-licenses
 
 BASE_VERSION?=0.6.0.dev1
+# Env variable version is set by Jenkins, it will be only the Stratio part
+FINAL_VERSION=$(BASE_VERSION)-incubating-$(version)
+COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
+
 VERSION=$(BASE_VERSION)-incubating
 COMMIT=$(shell git rev-parse --short=12 --verify HEAD)
-ifeq (, $(findstring dev, $(VERSION)))
+ifeq (, $(findstring dev, $(FINAL_VERSION)))
 IS_SNAPSHOT?=false
 else
 IS_SNAPSHOT?=true
@@ -58,9 +62,9 @@ RUN_SUFFIX=$(if $(USE_VAGRANT),")
 
 RUN=$(RUN_PREFIX)$(1)$(RUN_SUFFIX)
 
-ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(VERSION) IS_SNAPSHOT=$(IS_SNAPSHOT)
+ENV_OPTS:=APACHE_SPARK_VERSION=$(APACHE_SPARK_VERSION) VERSION=$(FINAL_VERSION) IS_SNAPSHOT=$(IS_SNAPSHOT)
 
-ASSEMBLY_JAR:=toree-assembly-$(VERSION)$(SNAPSHOT).jar
+ASSEMBLY_JAR:=toree-assembly-$(FINAL_VERSION)$(SNAPSHOT).jar
 
 help:
 	@echo '	'
@@ -75,8 +79,17 @@ help:
 	@echo '	jupyter - starts a docker image with Jupyter Notebook with Toree installed'
 	@echo '	'
 
+package: build dist bin-release
+
+deploy:
+	$(call RUN,$(ENV_OPTS) ./bin/deploy.sh)
+
+# Jenkins needs this target even if it does nothing
+change-version:
+	@echo 'Noting to do here...'
+
 build-info:
-	@echo '$(ENV_OPTS) $(VERSION)'
+	@echo '$(ENV_OPTS) $(FINAL_VERSION)'
 
 clean-dist:
 	-rm -r dist
@@ -135,7 +148,7 @@ dist/toree/bin: ${shell find ./etc/bin/*}
 
 dist/toree/VERSION:
 	@mkdir -p dist/toree
-	@echo "VERSION: $(VERSION)" > dist/toree/VERSION
+	@echo "VERSION: $(FINAL_VERSION)" > dist/toree/VERSION
 	@echo "COMMIT: $(COMMIT)" >> dist/toree/VERSION
 
 dist/toree/logo-64x64.png:
@@ -233,7 +246,7 @@ dist/toree-pip/toree-$(BASE_VERSION).tar.gz: dist/toree
 	@$(GEN_PIP_PACKAGE_INFO)
 	@$(DOCKER) --user=root $(IMAGE) python setup.py sdist --dist-dir=.
 	@$(DOCKER) -p 8888:8888 --user=root	$(IMAGE) bash -c	'pip install toree-$(BASE_VERSION).tar.gz && jupyter toree install'
-#	-@(cd dist/toree-pip; find . -not -name 'toree-$(VERSION).tar.gz' -maxdepth 1 | xargs rm -r )
+#	-@(cd dist/toree-pip; find . -not -name 'toree-$(FINAL_VERSION).tar.gz' -maxdepth 1 | xargs rm -r )
 
 pip-release: dist/toree-pip/toree-$(BASE_VERSION).tar.gz
 
@@ -255,34 +268,34 @@ publish-pip: sign-pip
 ################################################################################
 # BIN PACKAGE
 ################################################################################
-dist/toree-bin/toree-$(VERSION)-bin.tar.gz: dist/toree
-	@ln -s toree dist/toree-$(VERSION)
+dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz: dist/toree
+	@ln -s toree dist/toree-$(FINAL_VERSION)
 	@mkdir -p dist/toree-bin
-	@(cd dist; tar -cvzhf toree-bin/toree-$(VERSION)-bin.tar.gz toree-$(VERSION))
-	@rm dist/toree-$(VERSION)
+	@(cd dist; tar -cvzhf toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz toree-$(FINAL_VERSION))
+	@rm dist/toree-$(FINAL_VERSION)
 
-bin-release: dist/toree-bin/toree-$(VERSION)-bin.tar.gz
+bin-release: dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz
 
-dist/toree-bin/toree-$(VERSION)-bin.tar.gz.md5 dist/toree-bin/toree-$(VERSION)-bin.tar.gz.asc dist/toree-bin/toree-$(VERSION)-bin.tar.gz.sha512: dist/toree-bin/toree-$(VERSION)-bin.tar.gz
-	@GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) etc/tools/./sign-file dist/toree-bin/toree-$(VERSION)-bin.tar.gz
+dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.md5 dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.asc dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.sha512: dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz
+	@GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) etc/tools/./sign-file dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz
 
-sign-bin: dist/toree-bin/toree-$(VERSION)-bin.tar.gz.md5 dist/toree-bin/toree-$(VERSION)-bin.tar.gz.asc dist/toree-bin/toree-$(VERSION)-bin.tar.gz.sha512
+sign-bin: dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.md5 dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.asc dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz.sha512
 
 publish-bin:
 
 ################################################################################
 # SRC PACKAGE
 ################################################################################
-dist/toree-src/toree-$(VERSION)-src.tar.gz:
+dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz:
 	@mkdir -p dist/toree-src
-	@git archive HEAD --prefix toree-$(VERSION)-src/ -o dist/toree-src/toree-$(VERSION)-src.tar.gz
+	@git archive HEAD --prefix toree-$(FINAL_VERSION)-src/ -o dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz
 
-src-release: dist/toree-src/toree-$(VERSION)-src.tar.gz
+src-release: dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz
 
-dist/toree-src/toree-$(VERSION)-src.tar.gz.md5 dist/toree-src/toree-$(VERSION)-src.tar.gz.asc dist/toree-src/toree-$(VERSION)-src.tar.gz.sha512: dist/toree-src/toree-$(VERSION)-src.tar.gz
-	@GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) etc/tools/./sign-file dist/toree-src/toree-$(VERSION)-src.tar.gz
+dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.md5 dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.asc dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.sha512: dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz
+	@GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) etc/tools/./sign-file dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz
 
-sign-src: dist/toree-src/toree-$(VERSION)-src.tar.gz.md5 dist/toree-src/toree-$(VERSION)-src.tar.gz.asc dist/toree-src/toree-$(VERSION)-src.tar.gz.sha512
+sign-src: dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.md5 dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.asc dist/toree-src/toree-$(FINAL_VERSION)-src.tar.gz.sha512
 
 publish-src:
 
