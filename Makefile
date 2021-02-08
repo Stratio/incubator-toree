@@ -68,15 +68,11 @@ ASSEMBLY_JAR:=toree-assembly-$(FINAL_VERSION)$(SNAPSHOT).jar
 
 help:
 	@echo '	'
-	@echo '	audit - run audit tools against the source code'
 	@echo '	clean - clean build files'
 	@echo '	dist - build a directory with contents to package'
 	@echo '	build - builds assembly'
-	@echo '	test - run all units'
-	@echo '	system-test - run all system tests'
-	@echo '	release - creates packaged distribution'
-	@echo '	dev-binder - starts a docker image with Jupyter Notebook and Toree for using with Binder'
-	@echo '	jupyter - starts a docker image with Jupyter Notebook with Toree installed'
+    @echo ' package - builds and creates tar.gz with package'
+	@echo ' deploy - uploads the tar.gz package to nexus'
 	@echo '	'
 
 download-sbt:
@@ -139,10 +135,6 @@ target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): dist/toree-legal project/build.pr
 
 build: target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR)
 
-test: VM_WORKDIR=/src/toree-kernel
-test:
-	$(call RUN,$(ENV_OPTS) JAVA_OPTS="-Xmx4096M" build-tools/sbt/bin/sbt compile test)
-
 sbt-%:
 	$(call RUN,$(ENV_OPTS) build-tools/sbt/bin/sbt $(subst sbt-,,$@) )
 
@@ -186,15 +178,14 @@ dist/toree: dist/toree/VERSION dist/toree/logo-64x64.png dist/toree-legal dist/t
 	@cp -R dist/toree-legal/* dist/toree
 	@cp RELEASE_NOTES.md dist/toree/RELEASE_NOTES.md
 
-dist: dist/toree pip-release
+dist: dist/toree
+
 
 ################################################################################
 # BIN PACKAGE
 ################################################################################
-dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz: dist/toree
-	@ln -s toree dist/toree-$(FINAL_VERSION)
+dist/toree-bin/toree-$(FINAL_VERSION)-binary-release.tar.gz: dist/toree
 	@mkdir -p dist/toree-bin
-	@(cd dist; tar -cvzhf toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz toree-$(FINAL_VERSION))
-	@rm dist/toree-$(FINAL_VERSION)
+	@(cd dist; tar -cvzf toree-bin/toree-$(FINAL_VERSION).tar.gz toree)
 
-bin-release: dist/toree-bin/toree-$(FINAL_VERSION)-bin.tar.gz
+bin-release: dist/toree-bin/toree-$(FINAL_VERSION)-binary-release.tar.gz
