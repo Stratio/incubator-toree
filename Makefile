@@ -96,7 +96,7 @@ clean-dist:
 
 clean: VM_WORKDIR=/src/toree-kernel
 clean: clean-dist
-	$(call RUN,$(ENV_OPTS) sbt clean)
+	$(call RUN,$(ENV_OPTS) build-tools/sbt/bin/sbt clean)
 	-find . -name target -type d -exec rm -fr {} +
 	-find . -name .ipynb_checkpoints  -type d -exec rm -fr {} +
 
@@ -127,16 +127,16 @@ target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): ${shell find ./*/src/main/**/*}
 target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): ${shell find ./*/build.sbt}
 target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): ${shell find ./project/*.scala} ${shell find ./project/*.sbt}
 target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR): dist/toree-legal project/build.properties build.sbt
-	$(call RUN,$(ENV_OPTS) sbt root/assembly)
+	$(call RUN,$(ENV_OPTS) build-tools/sbt/bin/sbt root/assembly)
 
 build: target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR)
 
 test: VM_WORKDIR=/src/toree-kernel
 test:
-	$(call RUN,$(ENV_OPTS) JAVA_OPTS="-Xmx4096M" sbt compile test)
+	$(call RUN,$(ENV_OPTS) JAVA_OPTS="-Xmx4096M" build-tools/sbt/bin/sbt compile test)
 
 sbt-%:
-	$(call RUN,$(ENV_OPTS) sbt $(subst sbt-,,$@) )
+	$(call RUN,$(ENV_OPTS) build-tools/sbt/bin/sbt $(subst sbt-,,$@) )
 
 dist/toree/lib: target/scala-$(SCALA_VERSION)/$(ASSEMBLY_JAR)
 	@mkdir -p dist/toree/lib
@@ -227,7 +227,7 @@ system-test: pip-release .toree-dev-image
 # Jars
 ################################################################################
 publish-jars:
-	@$(ENV_OPTS) GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) sbt publish-signed
+	@$(ENV_OPTS) GPG_PASSWORD='$(GPG_PASSWORD)' GPG=$(GPG) build-tools/sbt/bin/sbt publish-signed
 
 ################################################################################
 # PIP PACKAGE
