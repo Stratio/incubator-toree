@@ -42,7 +42,6 @@ object KernelSecurityManager {
    */
   private val permissionsToCheck: Map[String, Boolean] = HashMap()
 
-
   /**
    * Checks whether the permission with the provided name is listed to be
    * checked.
@@ -87,6 +86,9 @@ class KernelSecurityManager extends SecurityManager {
     if (perm.getActions == "read" &&
       perm.getName.contains(this.getClass.getSimpleName))
       return
+
+    if (shouldCheckPermission(perm.getName))
+      super.checkPermission(perm, context)
   }
 
   override def checkPermission(perm: Permission): Unit = {
@@ -96,6 +98,9 @@ class KernelSecurityManager extends SecurityManager {
     if (perm.getActions == "read" &&
       perm.getName.contains(this.getClass.getSimpleName))
       return
+
+    if (shouldCheckPermission(perm.getName))
+      super.checkPermission(perm)
   }
 
   def _isRestrictedGroup(): Boolean = {

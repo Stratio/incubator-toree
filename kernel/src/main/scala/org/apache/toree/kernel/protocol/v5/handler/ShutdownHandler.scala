@@ -23,7 +23,7 @@ import org.apache.toree.kernel.protocol.v5.kernel.{ActorLoader, Utilities}
 import org.apache.toree.kernel.protocol.v5._
 import org.apache.toree.security.KernelSecurityManager
 import org.apache.toree.utils.MessageLogSupport
-import play.api.data.validation.ValidationError
+import play.api.libs.json.JsonValidationError
 import play.api.libs.json.JsPath
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,6 +41,8 @@ class ShutdownHandler(
   override def process(kernelMessage: KernelMessage): Future[_] = Future {
     logKernelMessageAction("Initiating Shutdown request for", kernelMessage)
 
+    val kernelInfo = SparkKernelInfo
+
     val shutdownReply = ShutdownReply(false)
 
     val replyHeader = Header(
@@ -48,7 +50,7 @@ class ShutdownHandler(
       "",
       java.util.UUID.randomUUID.toString,
       ShutdownReply.toTypeString,
-      "")
+      kernelInfo.protocolVersion)
 
     val kernelResponseMessage = KMBuilder()
       .withIds(kernelMessage.ids)

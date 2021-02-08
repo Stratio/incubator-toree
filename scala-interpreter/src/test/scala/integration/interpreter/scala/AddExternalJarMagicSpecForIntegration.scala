@@ -25,7 +25,7 @@ import org.apache.toree.global.StreamState
 import org.apache.toree.interpreter._
 import org.apache.toree.kernel.api.KernelLike
 import org.apache.toree.kernel.interpreter.scala.ScalaInterpreter
-import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfter, FunSpec, Ignore, Matchers}
 
 @SbtForked
@@ -92,7 +92,7 @@ class AddExternalJarMagicSpecForIntegration
       }
 
       ignore("should support Scala jars") {
-        val locationURL = "http://repo1.maven.org/maven2/org/scala-rules/rule-engine-core_2.11/0.5.1/rule-engine-core_2.11-0.5.1.jar"
+        val locationURL = "https://repo1.maven.org/maven2/org/scala-rules/rule-engine-core_2.11/0.5.1/rule-engine-core_2.11-0.5.1.jar"
         val testJarUrl = JarUtils.downloadJar(tempdir.toString, locationURL)
 
         // Should fail since jar was not added to paths

@@ -28,7 +28,7 @@ import org.apache.toree.kernel.protocol.v5.stream.KernelOutputStream
 import org.apache.toree.{global => kernelGlobal}
 import Utilities._
 import org.apache.toree.utils._
-import play.api.data.validation.ValidationError
+import play.api.libs.json.JsonValidationError
 import play.api.libs.json.JsPath
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
@@ -89,19 +89,29 @@ class ExecuteRequestHandler(
         case Success(tuple) =>
           val (executeReply, executeResult) = updateCount(tuple, executionCount)
 
-          //  Send an ExecuteReply to the client
-          val executeReplyMsg = skeletonBuilder
-            .withHeader(MessageType.Outgoing.ExecuteReply)
-            .withContentString(executeReply).build
-          relayMsg(executeReplyMsg, relayActor)
+          if (executeReply.status.equals("error")) {
+            // Send an ExecuteReplyError with the result of the code execution to ioPub.error
+            val replyError: ExecuteReply = ExecuteReplyError(
+              executionCount,
+              executeReply.ename,
+              executeReply.evalue,
+              executeReply.traceback)
+            relayErrorMessages(relayActor, replyError, skeletonBuilder)
+          } else {
+            //  Send an ExecuteReply to the client
+            val executeReplyMsg = skeletonBuilder
+              .withHeader(MessageType.Outgoing.ExecuteReply)
+              .withMetadata(Metadata("status" -> executeReply.status))
+              .withContentString(executeReply).build
+            relayMsg(executeReplyMsg, relayActor)
 
-          //  Send an ExecuteResult with the result of the code execution
-          if (executeResult.hasContent) {
-            val executeResultMsg = skeletonBuilder
-              .withIds(Seq(MessageType.Outgoing.ExecuteResult.toString.getBytes))
-              .withHeader(MessageType.Outgoing.ExecuteResult)
-              .withContentString(executeResult).build
-            relayMsg(executeResultMsg, relayActor)
+            if (executeResult.hasContent) {
+              val executeResultMsg = skeletonBuilder
+                .withIds(Seq(MessageType.Outgoing.ExecuteResult.toString.getBytes))
+                .withHeader(MessageType.Outgoing.ExecuteResult)
+                .withContentString(executeResult).build
+              relayMsg(executeResultMsg, relayActor)
+            }
           }
 
         case Failure(error: Throwable) =>
@@ -115,7 +125,7 @@ class ExecuteRequestHandler(
       }
     }
 
-    def parseErrorHandler(invalid: Seq[(JsPath, Seq[ValidationError])]) = {
+    def parseErrorHandler(invalid: Seq[(JsPath, Seq[JsonValidationError])]) = {
       val errs = invalid.map (e => s"JSPath ${e._1} has error ${e._2}").toList
       logger.error(s"Validation errors when parsing ExecuteRequest: ${errs}")
       val replyError: ExecuteReply = ExecuteReplyError(
@@ -148,6 +158,7 @@ class ExecuteRequestHandler(
                          skeletonBuilder: KMBuilder) {
     val executeReplyMsg = skeletonBuilder
       .withHeader(MessageType.Outgoing.ExecuteReply)
+      .withMetadata(Metadata("status" -> replyError.status))
       .withContentString(replyError).build
 
     val errorContent: ErrorContent =  ErrorContent(
