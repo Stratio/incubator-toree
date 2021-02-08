@@ -71,7 +71,7 @@ help:
 	@echo '	clean - clean build files'
 	@echo '	dist - build a directory with contents to package'
 	@echo '	build - builds assembly'
-    @echo ' package - builds and creates tar.gz with package'
+	@echo ' package - builds and creates tar.gz with package'
 	@echo ' deploy - uploads the tar.gz package to nexus'
 	@echo '	'
 
