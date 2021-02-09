@@ -323,7 +323,7 @@ class ScalaInterpreter(private val config:Config = ConfigFactory.load) extends I
 
          val (obj, defStr, text) = prepareResult(lastOutput)
          defStr.foreach(kernel.display.content(MIMEType.PlainText, _))
-         val output = interpretConstructExecuteError(text.get)
+         val output = interpretConstructExecuteError(text.getOrElse(""))
          (Results.Error, Right(output))
 
        case Results.Aborted =>
