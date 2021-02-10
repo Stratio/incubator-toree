@@ -33,7 +33,6 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
 
   private[toree] var iMain: IMain = _
   private var completer: PresentationCompilerCompleter = _
-  private val exceptionHack = new ExceptionHack()
 
   def _runtimeClassloader = {
     _thisClassloader
@@ -253,7 +252,6 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
       // if any error returns None
       case e: Throwable => {
         logger.debug(s"Error reading variable name: ${variableName}", e)
-        clearLastException()
         None
       }
     }
@@ -286,9 +284,6 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
       //   ADD IMPORTS generates too many classes, client is responsible for adding import
       logger.debug("Adding org.apache.spark.SparkContext._ to imports")
       iMain.interpret("import org.apache.spark.SparkContext._")
-
-      logger.debug("Adding the hack for the exception handling retrieval.")
-      iMain.bind("_exceptionHack", classOf[ExceptionHack].getName, exceptionHack, List("@transient"))
     }
 
     this
@@ -384,48 +379,7 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
     }
   }
 
-  private def retrieveLastException: Throwable = {
-    iMain.beSilentDuring {
-      iMain.interpret("_exceptionHack.lastException = lastException")
-    }
-    exceptionHack.lastException
-  }
-
-  private def clearLastException(): Unit = {
-    iMain.directBind(
-      ExecutionExceptionName,
-      classOf[Throwable].getName,
-      null
-    )
-    exceptionHack.lastException = null
-  }
-
   protected def interpretConstructExecuteError(output: String) = {
-    Option(retrieveLastException) match {
-      // Runtime error
-      case Some(e) =>
-        val ex = e.asInstanceOf[Throwable]
-        clearLastException()
-
-        // The scala REPL does a pretty good job of returning us a stack trace that is free from all the bits that the
-        // interpreter uses before it.
-        //
-        // The REPL emits its message as something like this, so trim off the first and last element
-        //
-        //    java.lang.ArithmeticException: / by zero
-        //    at failure(<console>:17)
-        //    at call_failure(<console>:19)
-        //    ... 40 elided
-
-        val formattedException = output.split("\n")
-
-        ExecuteError(
-          ex.getClass.getName,
-          ex.getLocalizedMessage,
-          formattedException.slice(1, formattedException.size - 1).toList
-        )
-      // Compile time error, need to check internal reporter
-      case _ =>
         if (iMain.reporter.hasErrors)
         // TODO: This wrapper is not needed when just getting compile
         // error that we are not parsing... maybe have it be purely
@@ -437,16 +391,4 @@ trait ScalaInterpreterSpecific extends SettingsProducerLike { this: ScalaInterpr
         // May as capture the output here.  Could be useful
           ExecuteError("Unknown Error", output, List())
     }
-  }
-}
-
-/**
-  * Due to a bug in the scala interpreter under scala 2.11 (SI-8935) with IMain.valueOfTerm we can hack around it by
-  * binding an instance of ExceptionHack into iMain and interpret the "_exceptionHack.lastException = lastException".
-  * This makes it possible to extract the exception.
-  *
-  * TODO: Revisit this once Scala 2.12 is released.
-  */
-class ExceptionHack {
-  var lastException: Throwable = _
 }
