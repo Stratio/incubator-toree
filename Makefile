@@ -34,7 +34,7 @@ IS_SNAPSHOT?=true
 SNAPSHOT:=-SNAPSHOT
 endif
 
-APACHE_SPARK_VERSION?=3.0.0
+APACHE_SPARK_VERSION?=3.0.1
 SCALA_VERSION?=2.12
 IMAGE?=jupyter/all-spark-notebook:latest
 EXAMPLE_IMAGE?=apache/toree-examples
