@@ -26,7 +26,7 @@ crossScalaVersions in ThisBuild := Seq("2.12.12")
 scalaVersion in ThisBuild := (crossScalaVersions in ThisBuild).value.head
 Dependencies.sparkVersion in ThisBuild := {
   val envVar = "APACHE_SPARK_VERSION"
-  val defaultVersion = "3.0.0"
+  val defaultVersion = "3.0.1"
 
 
   Properties.envOrNone(envVar) match {
