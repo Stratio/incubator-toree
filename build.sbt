@@ -28,6 +28,7 @@ Dependencies.sparkVersion in ThisBuild := {
   val envVar = "APACHE_SPARK_VERSION"
   val defaultVersion = "3.0.1"
 
+
   Properties.envOrNone(envVar) match {
     case None =>
       sLog.value.info(s"Using default Apache Spark version $defaultVersion!")
