@@ -22,6 +22,7 @@ object Dependencies {
 
   // Libraries
 
+
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % "2.5.31" // Apache v2
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % "2.5.31" // Apache v2
   val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % "2.5.31" // Apache v2
