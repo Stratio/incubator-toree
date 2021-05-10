@@ -2,7 +2,7 @@
 
 Only listing significant user-visible, not internal code cleanups and minor bug fixes.
 
-## 0.4.0 (upcoming)
+## 0.4.0 (May 10, 2021)
 
 * Update upstream toree to 0.5.0-incubating
 * [ROCK-3840] Update to Scala 2.12 and Spark 3
