@@ -1,7 +1,7 @@
 # Version History
 
 
-#### 0.4.0-bf889c9 (Built: May 10, 2021 | Pre-release)
+#### 0.4.0-bf889c9 (Built: May 10, 2021 | Released: May 18, 2021)
 
 #### 0.3.0-2dd6ee6 (Built: March 19, 2020 | Released: March 19, 2020)
 

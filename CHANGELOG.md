@@ -6,7 +6,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 * Pending changelog
 
-## 0.4.0-bf889c9 (Built: May 10, 2021 | Pre-release)
+## 0.4.0-bf889c9 (Built: May 10, 2021 | Released: May 18, 2021)
 
 * Update upstream toree to 0.5.0-incubating
 * [ROCK-3840] Update to Scala 2.12 and Spark 3
